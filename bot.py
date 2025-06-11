@@ -8,12 +8,12 @@ from telegram.ext import (
     filters, ContextTypes, ConversationHandler
 )
 
-# Загрузка переменных окружения
+# Загрузка .env переменных
 load_dotenv()
 BOT_TOKEN = os.getenv("BOT_TOKEN")
 GROUP_CHAT_ID = int(os.getenv("GROUP_CHAT_ID"))
 
-# Состояния формы
+# Этапы анкеты
 FIO, PHONE, VEHICLE, PHOTO_LIST = range(4)
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -96,6 +96,14 @@ async def confirm_photos(update: Update, context: ContextTypes.DEFAULT_TYPE):
         f"{contact_line}"
     )
 
+    # Отправляем уведомление перед заявкой
+    await context.bot.send_message(
+        chat_id=GROUP_CHAT_ID,
+        text="📢 <b>Поступила новая заявка!</b>",
+        parse_mode="HTML"
+    )
+
+    # Отправляем анкету
     await context.bot.send_photo(
         chat_id=GROUP_CHAT_ID,
         photo=photos[0],
