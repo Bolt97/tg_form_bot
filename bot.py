@@ -8,18 +8,18 @@ from telegram.ext import (
     filters, ContextTypes, ConversationHandler
 )
 
-# Загружаем переменные окружения
+# Загрузка переменных окружения
 load_dotenv()
 BOT_TOKEN = os.getenv("BOT_TOKEN")
 GROUP_CHAT_ID = int(os.getenv("GROUP_CHAT_ID"))
 
-# Состояния для ConversationHandler
+# Состояния формы
 FIO, PHONE, VEHICLE, PHOTO_LIST = range(4)
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(
         "🚗 <b>Добро пожаловать!</b>\n\n"
-        "Этот бот собирает заявки на участие в <b>автомобильной выставке BALALAYKA PICNIC </b>.\n\n"
+        "Этот бот собирает заявки на участие в <b>автомобильной выставке BALALAYKA PICNIC</b>.\n\n"
         "<b>21.06.2025</b>\n\n"
         "📋 Сейчас мы последовательно соберём ваши данные.\n"
         "<i>В любой момент можно отменить командой /cancel</i>",
@@ -73,19 +73,33 @@ async def confirm_photos(update: Update, context: ContextTypes.DEFAULT_TYPE):
         return PHOTO_LIST
 
     user = update.effective_user
-    safe_caption = escape(
-        f"📬 Новая заявка на выставку:\n\n"
-        f"👤 ФИО: {context.user_data['fio']}\n"
-        f"📞 Телефон: {context.user_data['phone']}\n"
-        f"🚗 Техника: {context.user_data['vehicle']}\n"
-        f"🕒 Время: {datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n"
-        f"🆔 @{user.username or user.id}"
+    fio = escape(context.user_data['fio'])
+    phone = escape(context.user_data['phone'])
+    vehicle = escape(context.user_data['vehicle'])
+    time = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+
+    if user.username:
+        contact_line = (
+            f'<b>🆔 Пользователь:</b> '
+            f'<a href="https://t.me/{user.username}">@{user.username}</a> '
+            f'| ID: <code>{user.id}</code>'
+        )
+    else:
+        contact_line = f'<b>🆔 Пользователь:</b> ID: <code>{user.id}</code>'
+
+    safe_caption = (
+        f"📬 <b>Новая заявка на выставку:</b>\n\n"
+        f"<b>👤 ФИО:</b> {fio}\n"
+        f"<b>📞 Телефон:</b> {phone}\n"
+        f"<b>🚗 Техника:</b> {vehicle}\n"
+        f"<b>🕒 Время:</b> {time}\n"
+        f"{contact_line}"
     )
 
     await context.bot.send_photo(
         chat_id=GROUP_CHAT_ID,
         photo=photos[0],
-        caption=f"<pre>{safe_caption}</pre>",
+        caption=safe_caption,
         parse_mode="HTML"
     )
 
